@@ -267,7 +267,7 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
       }
 
       ultimoErro = `Erro do OpenRouter: ${resposta.status}`;
-      if (resposta.status === 429 || resposta.status === 503) {
+      if (resposta.status === 429 || resposta.status === 402 || resposta.status === 503) {
         const retryAfter = Number(resposta.headers.get("retry-after") || 0) * 1000;
         await new Promise((r) => setTimeout(r, Math.min(Math.max(retryAfter, 1200), 4000)));
         continue;
