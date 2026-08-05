@@ -24,18 +24,20 @@ export function Button({
   };
   const variants = {
     primary:
-      "bg-primary text-primary-foreground hover:opacity-90 shadow-sm hover:shadow-md",
+      "bg-gradient-to-b from-primary to-primary/85 text-primary-foreground hover:opacity-95 shadow-[0_4px_20px_-6px_rgba(139,92,246,0.55)] hover:shadow-[0_6px_28px_-6px_rgba(139,92,246,0.7)] relative overflow-hidden",
     secondary:
       "bg-secondary text-secondary-foreground hover:bg-secondary/70",
     outline:
-      "border border-border bg-transparent hover:bg-secondary text-foreground",
+      "border border-border bg-transparent hover:bg-secondary/60 text-foreground",
     ghost: "hover:bg-secondary text-foreground",
     destructive:
       "bg-destructive text-white hover:opacity-90",
-    success: "bg-success text-white hover:opacity-90",
+    success:
+      "bg-gradient-to-b from-success to-success/85 text-white hover:opacity-95 shadow-[0_4px_20px_-6px_rgba(34,197,94,0.5)]",
   };
   return (
     <button className={cn(base, sizes[size], variants[variant], className)} {...props}>
+      {variant === "primary" && <span className="shine" aria-hidden />}
       {children}
     </button>
   );

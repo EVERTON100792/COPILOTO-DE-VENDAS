@@ -28,7 +28,7 @@ export function Topbar({ titulo, subtitulo }: { titulo?: string; subtitulo?: str
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/80 px-6 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b border-border bg-background/70 px-6 backdrop-blur-2xl">
       <div className="min-w-0">
         <h1 className="truncate text-sm font-semibold">
           {titulo ?? "Painel de Controle"}
@@ -56,12 +56,12 @@ export function Topbar({ titulo, subtitulo }: { titulo?: string; subtitulo?: str
         >
           <Bell className="h-4 w-4" />
           {alertas > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-b from-rose-500 to-red-600 px-1 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(244,63,94,0.6)]">
               {alertas > 9 ? "9+" : alertas}
             </span>
           )}
         </button>
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-600 text-sm font-bold text-white shadow-[0_0_14px_-2px_rgba(139,92,246,0.6)]">
           {config.nomeVendedor?.[0] ?? "V"}
         </div>
       </div>

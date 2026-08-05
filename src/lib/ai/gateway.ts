@@ -1,13 +1,20 @@
 import type { AnaliseIA, Empresa, Mensagem, NotaConsultor } from "../types";
 import { analisarConversa } from "./analysis";
 import { avaliarMensagem } from "./consultant";
-import { gerarAbordagensEmpresas } from "./followup";
 import { parsearConversa } from "./parser";
 
 interface GatewayConfig {
   openrouterKey: string;
   modeloIA: string;
   usarIAReal: boolean;
+  nomeVendedor?: string;
+}
+
+export function periodoDia(): string {
+  const hora = new Date().getHours();
+  if (hora >= 5 && hora < 12) return "Bom dia";
+  if (hora >= 12 && hora < 18) return "Boa tarde";
+  return "Boa noite";
 }
 
 async function chamarOpenRouter(
@@ -19,6 +26,8 @@ async function chamarOpenRouter(
   config?: GatewayConfig
 ): Promise<unknown> {
   if (!config?.usarIAReal) return null;
+  const controlador = new AbortController();
+  const tempo = setTimeout(() => controlador.abort(), 45000);
   try {
     const resposta = await fetch("/api/ai", {
       method: "POST",
@@ -26,12 +35,24 @@ async function chamarOpenRouter(
         "Content-Type": "application/json",
         ...(config.openrouterKey ? { "x-openrouter-key": config.openrouterKey } : {}),
       },
-      body: JSON.stringify({ acao, mensagens, contexto, mensagemConsultor, ultimaFala, modelo: config.modeloIA }),
+      body: JSON.stringify({
+        acao,
+        mensagens,
+        contexto,
+        mensagemConsultor,
+        ultimaFala,
+        nomeVendedor: config.nomeVendedor,
+        periodoDia: periodoDia(),
+        modelo: config.modeloIA,
+      }),
+      signal: controlador.signal,
     });
     if (!resposta.ok) return null;
     return await resposta.json();
   } catch {
     return null;
+  } finally {
+    clearTimeout(tempo);
   }
 }
 
@@ -185,8 +206,9 @@ export async function gerarAbordagemInicial(
     }
   }
 
-  const local = gerarAbordagensEmpresas([empresa as Empresa], 1);
-  return local[0]?.mensagem ?? "";
+  const primeiro = empresa.nome.split(" ")[0];
+  const vendedor = config?.nomeVendedor ? `Meu nome é ${config.nomeVendedor}` : "Sou da nossa agência digital";
+  return `${periodoDia()}! ${vendedor} e encontrei o(a) ${empresa.nome} aqui em ${empresa.cidade} com ${empresa.notaGoogle.toFixed(1)} no Google. Se você que atende puder me dizer se consigo falar com o proprietário, agradeço! Preparei um site demonstrativo para ${primeiro ?? empresa.nome}; teria interesse em dar uma olhada?`;
 }
 
 export async function gerarProximaMensagem(

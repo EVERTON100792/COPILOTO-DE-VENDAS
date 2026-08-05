@@ -47,17 +47,20 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col border-r border-border bg-card/60 backdrop-blur-xl transition-all duration-200",
+        "sticky top-0 z-40 flex h-screen shrink-0 flex-col border-r border-border bg-card/50 backdrop-blur-2xl transition-all duration-200",
         colapsada ? "w-16" : "w-60"
       )}
     >
       <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-[0_0_20px_-2px_rgba(139,92,246,0.6)]">
           <Target className="h-4 w-4" />
+          <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
         </div>
         {!colapsada && (
           <div className="min-w-0">
-            <p className="text-sm font-bold leading-tight">Sales Negotiator</p>
+            <p className="text-sm font-bold leading-tight">
+              Sales <span className="text-gradient">Negotiator</span>
+            </p>
             <p className="text-[10px] leading-tight text-muted-foreground">AI Copiloto de Vendas</p>
           </div>
         )}

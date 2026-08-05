@@ -132,3 +132,39 @@ export const SEGMENTOS_SUGERIDOS = [
 ];
 
 export const categorias = SEGMENTOS_SUGERIDOS;
+
+const CHAVE_SEGMENTOS_EXTRA = "sna_segmentos_extra_v1";
+
+function lerSegmentosExtra(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CHAVE_SEGMENTOS_EXTRA);
+    if (!raw) return [];
+    const lista = JSON.parse(raw) as unknown;
+    if (!Array.isArray(lista)) return [];
+    return lista.filter((s): s is string => typeof s === "string" && s.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+/** Todos os segmentos: sugestões + os cadastrados pelo usuário. */
+export function obterTodosSegmentos(): string[] {
+  return Array.from(new Set([...SEGMENTOS_SUGERIDOS, ...lerSegmentosExtra()]));
+}
+
+/** Cadastra um segmento novo e retorna a lista completa atualizada. */
+export function salvarSegmentoCustomizado(nome: string): string[] {
+  const nomeLimpo = nome.trim();
+  if (!nomeLimpo) return obterTodosSegmentos();
+  const atuais = lerSegmentosExtra();
+  const lista = atuais.includes(nomeLimpo) ? atuais : [...atuais, nomeLimpo];
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(CHAVE_SEGMENTOS_EXTRA, JSON.stringify(lista));
+    } catch {
+      // ignore
+    }
+  }
+  return Array.from(new Set([...SEGMENTOS_SUGERIDOS, ...lista]));
+}

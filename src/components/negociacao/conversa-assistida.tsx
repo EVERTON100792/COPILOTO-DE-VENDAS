@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
 import { conversaComoTexto } from "@/lib/ai/parser";
 import { analisarComIA, gerarAbordagemInicial, gerarProximaMensagem, type ProximaMensagem } from "@/lib/ai/gateway";
+import { PipelineAnalise } from "@/components/negociacao/pipeline-analise";
 import { adicionarDias, hoje, uid } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -44,11 +45,12 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   const [sugestao, setSugestao] = useState<ProximaMensagem | null>(null);
   const [carregandoSugestao, setCarregandoSugestao] = useState(false);
   const [registrando, setRegistrando] = useState(false);
-
+  const [pipelineKey, setPipelineKey] = useState(0);
   const configIA = {
     openrouterKey: config.openrouterKey,
     modeloIA: config.modeloIA,
     usarIAReal: config.usarIAReal,
+    nomeVendedor: config.nomeVendedor,
   };
   const contexto = {
     nomeEmpresa: empresa.nome,
@@ -63,9 +65,14 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
 
   const gerarAbordagem = async () => {
     setGerandoAbordagem(true);
-    const texto = await gerarAbordagemInicial(empresa, configIA);
-    setAbordagem(texto);
-    setGerandoAbordagem(false);
+    try {
+      const texto = await gerarAbordagemInicial(empresa, configIA);
+      setAbordagem(texto);
+    } catch {
+      toast.error("Não consegui gerar a abordagem — tente de novo");
+    } finally {
+      setGerandoAbordagem(false);
+    }
   };
 
   const copiar = async (texto: string, aviso: string) => {
@@ -99,11 +106,16 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
       return;
     }
     setCarregandoSugestao(true);
-    const proxima = await gerarProximaMensagem(respostaCliente.trim(), empresa.conversa, empresa, configIA);
-    setSugestao(proxima);
-    setCarregandoSugestao(false);
+    setPipelineKey((k) => k + 1);
+    try {
+      const proxima = await gerarProximaMensagem(respostaCliente.trim(), empresa.conversa, empresa, configIA);
+      setSugestao(proxima);
+    } catch {
+      toast.error("Não consegui gerar a sugestão — tente de novo");
+    } finally {
+      setCarregandoSugestao(false);
+    }
   };
-
   const registrarTurno = async () => {
     if (!sugestao?.mensagem || !respostaCliente.trim()) return;
     setRegistrando(true);
@@ -135,10 +147,13 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   };
 
   return (
-    <Card className="border-primary/40 bg-gradient-to-br from-primary/5 via-card to-card">
+    <Card className="border-gradient shadow-[0_8px_40px_-12px_rgba(139,92,246,0.45)]">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-primary" /> Conversa Assistida
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white shadow-[0_0_14px_-2px_rgba(139,92,246,0.7)]">
+            <Bot className="h-4 w-4" />
+          </span>
+          Conversa Assistida
         </CardTitle>
         <Badge variant="violet">Loop guiado: aborde → cole a resposta → envie o que a IA mandar</Badge>
       </CardHeader>
@@ -212,13 +227,23 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
                 className="min-h-[90px]"
               />
               <div className="flex justify-end">
-                <Button onClick={gerarSugestao} disabled={carregandoSugestao || !respostaCliente.trim()}>
+                <Button
+                  onClick={gerarSugestao}
+                  disabled={carregandoSugestao || !respostaCliente.trim()}
+                  size="lg"
+                  className="group relative"
+                >
                   {carregandoSugestao ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Analisando com a IA...
+                    </>
                   ) : (
-                    <Wand2 className="h-4 w-4" />
+                    <>
+                      <Wand2 className="h-4 w-4 transition-transform group-hover:scale-110" />
+                      IA, o que eu mando agora?
+                    </>
                   )}
-                  IA, o que eu mando agora?
                 </Button>
               </div>
             </div>
@@ -292,6 +317,14 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
             )}
           </div>
         )}
+
+        {/* Pipeline de análise da IA */}
+        <PipelineAnalise
+          key={pipelineKey}
+          aberto={carregandoSugestao}
+          empresa={empresa.nome}
+          aoAbortar={() => setCarregandoSugestao(false)}
+        />
       </CardContent>
     </Card>
   );

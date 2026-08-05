@@ -23,7 +23,7 @@ export function Modal({ aberto, onFechar, titulo, descricao, children, largura =
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={onFechar}
           />
           <motion.div
@@ -32,7 +32,7 @@ export function Modal({ aberto, onFechar, titulo, descricao, children, largura =
             exit={{ opacity: 0, scale: 0.96, y: 12 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
             className={cn(
-              "relative w-full rounded-2xl border border-border bg-card p-6 shadow-2xl max-h-[85vh] overflow-y-auto",
+              "relative w-full rounded-2xl border border-border bg-card/95 p-6 shadow-2xl backdrop-blur-xl max-h-[85vh] overflow-y-auto",
               largura
             )}
           >

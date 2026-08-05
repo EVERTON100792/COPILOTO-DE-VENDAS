@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Campanha, Empresa } from "@/lib/types";
-import { SEGMENTOS_SUGERIDOS, STATUS_PIPELINE } from "@/lib/constants";
+import { STATUS_PIPELINE } from "@/lib/constants";
 import { adicionarDias } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { SegmentoSelect } from "@/components/ui/segmento-select";
 import { useStore } from "@/lib/store-context";
 
 interface EmpresaFormProps {
@@ -144,13 +145,7 @@ export function EmpresaForm({ aberto, onFechar, campanhaId = null, empresa = nul
 
         <div className="space-y-1.5">
           <Label>Categoria / Segmento</Label>
-          <Select value={form.categoria} onChange={(e) => set("categoria", e.target.value)}>
-            {SEGMENTOS_SUGERIDOS.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Select>
+          <SegmentoSelect value={form.categoria} onChange={(v) => set("categoria", v)} />
         </div>
 
         <div className="space-y-1.5">

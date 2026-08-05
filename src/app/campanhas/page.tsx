@@ -5,13 +5,14 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { MapPin, Megaphone, Plus, Target, Trash2, Users } from "lucide-react";
 import { useStore } from "@/lib/store-context";
-import { STATUS_CAMPANHA, SEGMENTOS_SUGERIDOS } from "@/lib/constants";
+import { STATUS_CAMPANHA } from "@/lib/constants";
 import { formatarData } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { SegmentoSelect } from "@/components/ui/segmento-select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Progresso } from "@/components/ui/progress";
 import { campanhaProgresso } from "@/lib/metrics";
@@ -161,13 +162,7 @@ export default function CampanhasPage() {
           </div>
           <div className="space-y-1.5">
             <Label>Segmento</Label>
-            <Select value={form.segmento} onChange={(e) => set("segmento", e.target.value)}>
-              {SEGMENTOS_SUGERIDOS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </Select>
+            <SegmentoSelect value={form.segmento} onChange={(v) => set("segmento", v)} />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label>Objetivo</Label>

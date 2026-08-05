@@ -14,6 +14,8 @@ interface Payload {
   acao: "analisar" | "consultor" | "proxima" | "abordagem";
   mensagemConsultor?: string;
   ultimaFala?: string;
+  nomeVendedor?: string;
+  periodoDia?: string;
   modelo?: string;
 }
 
@@ -68,7 +70,13 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
 
 const PROMPT_ABORDAGEM = `Você é o Sales Negotiator AI, um Diretor Comercial especializado em agências digitais e vendas consultivas de sites.
 O vendedor acabou de cadastrar uma empresa e vai abrir a conversa no WhatsApp.
-Escreva a mensagem de ABORDAGEM INICIAL perfeita, personalizada com o nome e os dados da empresa, em tom natural de brasileiro, curta (no máximo 2 frases) e que desperte curiosidade para vender o site.
+Escreva a mensagem de ABORDAGEM INICIAL perfeita seguindo estas orientações:
+- Use exatamente a saudação do período do dia informada (ex: "Bom dia!" ou "Boa tarde!" ou "Boa noite!") no começo.
+- Apresente o vendedor pelo nome informado, dizendo que ele trabalha com sites para o segmento da empresa.
+- Muitas vezes quem responde no WhatsApp é um funcionário e não o dono. Por isso, pergunte de forma natural e educada se ali é possível falar com o proprietário/dono do negócio.
+- Mencione que você (o vendedor) preparou um site demonstrativo (modelo) feito para o negócio deles e pergunte se teriam interesse em dar uma olhada.
+- Tom natural de brasileiro, curta (no máximo 3 frases), personalizada com os dados da empresa, que desperte curiosidade.
+- Nunca repita a mesma estrutura em mensagens diferentes: varie a ordem das frases e o vocabulário.
 Responda em português brasileiro, apenas com JSON válido, no formato:
 
 {
@@ -216,7 +224,7 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
       : payload.acao === "proxima"
         ? `Última fala do cliente: "${payload.ultimaFala}"\n\nHistórico da conversa:\n${conversaTexto}\n\nEmpresa: ${payload.contexto.nomeEmpresa} (${payload.contexto.segmento}, ${payload.contexto.cidade}, nota Google ${payload.contexto.notaGoogle})`
         : payload.acao === "abordagem"
-          ? `Empresa: ${payload.contexto.nomeEmpresa}\nSegmento: ${payload.contexto.segmento}\nCidade: ${payload.contexto.cidade}\nNota Google: ${payload.contexto.notaGoogle}`
+          ? `Nome do vendedor: ${payload.nomeVendedor ?? "o vendedor"}\nPeríodo do dia: ${payload.periodoDia ?? "Bom dia"}\nEmpresa: ${payload.contexto.nomeEmpresa}\nSegmento: ${payload.contexto.segmento}\nCidade: ${payload.contexto.cidade}\nNota Google: ${payload.contexto.notaGoogle}`
           : `Conversa:\n${conversaTexto}\n\nEmpresa: ${payload.contexto.nomeEmpresa} (${payload.contexto.segmento}, ${payload.contexto.cidade}, nota Google ${payload.contexto.notaGoogle})`;
 
   try {

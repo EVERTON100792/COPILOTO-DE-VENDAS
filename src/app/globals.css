@@ -14,40 +14,46 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #6d28d9;
+  --primary: #7c3aed;
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #1e293b;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
   --accent: #ede9fe;
-  --accent-foreground: #5b21b6;
+  --accent-foreground: #6d28d9;
   --destructive: #dc2626;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #8b5cf6;
+  --ring: #a78bfa;
   --radius: 0.625rem;
+  --aurora-a: rgba(124, 58, 237, 0.35);
+  --aurora-b: rgba(56, 189, 248, 0.28);
+  --aurora-c: rgba(244, 114, 182, 0.22);
 }
 
 .dark {
-  --background: #09090b;
+  --background: #07060b;
   --foreground: #f4f4f5;
-  --card: #111113;
+  --card: #0e0d14;
   --card-foreground: #f4f4f5;
-  --popover: #111113;
+  --popover: #0e0d14;
   --popover-foreground: #f4f4f5;
   --primary: #8b5cf6;
   --primary-foreground: #ffffff;
-  --secondary: #1c1c1f;
+  --secondary: #16141d;
   --secondary-foreground: #f4f4f5;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --accent: #2a2438;
+  --muted: #16141d;
+  --muted-foreground: #9b97a8;
+  --accent: #231a36;
   --accent-foreground: #c4b5fd;
   --destructive: #f87171;
-  --border: #232327;
-  --input: #232327;
-  --ring: #8b5cf6;
+  --border: rgba(139, 92, 246, 0.14);
+  --input: rgba(139, 92, 246, 0.18);
+  --ring: #a78bfa;
+  --aurora-a: rgba(124, 58, 237, 0.32);
+  --aurora-b: rgba(56, 189, 248, 0.18);
+  --aurora-c: rgba(236, 72, 153, 0.16);
 }
 
 @theme inline {
@@ -71,7 +77,7 @@
   --color-ring: var(--ring);
   --color-success: #22c55e;
   --color-warning: #f59e0b;
-  --color-info: #3b82f6;
+  --color-info: #38bdf8;
 }
 
 * {
@@ -90,6 +96,47 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ============ AURORA / PREMIUM BACKGROUND ============ */
+.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 600px at 12% -10%, var(--aurora-a), transparent 60%),
+    radial-gradient(800px 500px at 88% 0%, var(--aurora-b), transparent 55%),
+    radial-gradient(1000px 700px at 50% 120%, var(--aurora-c), transparent 60%);
+  animation: aurora-drift 18s ease-in-out infinite alternate;
+}
+
+.dark body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(139, 92, 246, 0.16) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.4;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 75%);
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(2%, 3%, 0) scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-2%, -2%, 0) scale(1.02);
+    opacity: 0.8;
+  }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -99,11 +146,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-muted-foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--color-muted-foreground) 28%, transparent);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--color-muted-foreground) 50%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 45%, transparent);
 }
 
 /* Grid background for hero blocks */
@@ -113,7 +160,39 @@ body {
   background-size: 40px 40px;
 }
 
-/* Animation utilities */
+/* ============ GLASS & GLOW UTILITIES ============ */
+.glass {
+  background: color-mix(in srgb, var(--color-card) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+.glass-strong {
+  background: color-mix(in srgb, var(--color-card) 55%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.border-gradient {
+  position: relative;
+  background:
+    linear-gradient(var(--color-card), var(--color-card)) padding-box,
+    linear-gradient(135deg, rgba(139, 92, 246, 0.55), rgba(56, 189, 248, 0.35), rgba(139, 92, 246, 0.15)) border-box;
+  border: 1px solid transparent;
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #c4b5fd, #a5b4fc, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-primary {
+  box-shadow: 0 0 24px -6px color-mix(in srgb, var(--color-primary) 55%, transparent);
+}
+
+/* ============ ANIMATIONS ============ */
 @keyframes pulse-dot {
   0%,
   100% {
@@ -146,6 +225,96 @@ body {
   );
   background-size: 800px 100px;
   animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer-primary {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+.shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+  transform: translateX(-150%);
+  animation: shimmer-primary 3.2s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-float-slow {
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+@keyframes ring-ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+.animate-ring-ping {
+  animation: ring-ping-soft 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes scanline {
+  0% {
+    top: -10%;
+  }
+  100% {
+    top: 110%;
+  }
+}
+.animate-scanline {
+  animation: scanline 3s linear infinite;
+}
+
+@keyframes aurora-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.animate-aurora-pan {
+  background-size: 200% 200%;
+  animation: aurora-pan 6s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 5s linear infinite;
 }
 
 ::-webkit-scrollbar {

@@ -27,7 +27,9 @@ export function StatCard({
       <Card
         className={cn(
           "p-4",
-          destaque && "border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card"
+          destaque
+            ? "border-gradient shadow-[0_8px_32px_-12px_rgba(139,92,246,0.4)]"
+            : "bg-card/70"
         )}
       >
         <div className="flex items-start justify-between">
