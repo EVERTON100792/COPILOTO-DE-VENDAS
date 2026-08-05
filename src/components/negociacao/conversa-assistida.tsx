@@ -45,7 +45,10 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   const [sugestao, setSugestao] = useState<ProximaMensagem | null>(null);
   const [carregandoSugestao, setCarregandoSugestao] = useState(false);
   const [registrando, setRegistrando] = useState(false);
+  const [registroAberto, setRegistroAberto] = useState(false);
+  const [registroKey, setRegistroKey] = useState(0);
   const [pipelineKey, setPipelineKey] = useState(0);
+  const aguardarMinimo = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   const configIA = {
     openrouterKey: config.openrouterKey,
     modeloIA: config.modeloIA,
@@ -65,8 +68,9 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
 
   const gerarAbordagem = async () => {
     setGerandoAbordagem(true);
+    setPipelineKey((k) => k + 1);
     try {
-      const texto = await gerarAbordagemInicial(empresa, configIA);
+      const [texto] = await Promise.all([gerarAbordagemInicial(empresa, configIA), aguardarMinimo(2800)]);
       setAbordagem(texto);
     } catch {
       toast.error("Não consegui gerar a abordagem — tente de novo");
@@ -84,20 +88,29 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   const registrarAbordagem = async () => {
     if (!abordagem) return;
     setRegistrando(true);
-    const mensagem: Mensagem = { id: uid("msg"), autor: "vendedor", texto: abordagem, data: hoje(), hora: agora() };
-    const novaConversa = [...empresa.conversa, mensagem];
-    const resultado = await analisarComIA(conversaComoTexto(novaConversa), contexto, configIA);
-    atualizarEmpresa(empresa.id, {
-      conversa: novaConversa,
-      analise: resultado?.analise ?? null,
-      status: resultado?.analise ? novoStatusPorAnalise(resultado.analise, empresa) : "AGUARDANDO_RESPOSTA",
-      classificacao: resultado?.analise?.classificacao ?? empresa.classificacao,
-      ultimoContato: hoje(),
-      proximoContato: adicionarDias(2),
-    });
-    setAbordagem(null);
-    setRegistrando(false);
-    toast.success("Abordagem registrada como enviada");
+    setRegistroAberto(true);
+    setRegistroKey((k) => k + 1);
+    try {
+      const mensagem: Mensagem = { id: uid("msg"), autor: "vendedor", texto: abordagem, data: hoje(), hora: agora() };
+      const novaConversa = [...empresa.conversa, mensagem];
+      const [resultado] = await Promise.all([
+        analisarComIA(conversaComoTexto(novaConversa), contexto, configIA),
+        aguardarMinimo(2800),
+      ]);
+      atualizarEmpresa(empresa.id, {
+        conversa: novaConversa,
+        analise: resultado?.analise ?? null,
+        status: resultado?.analise ? novoStatusPorAnalise(resultado.analise, empresa) : "AGUARDANDO_RESPOSTA",
+        classificacao: resultado?.analise?.classificacao ?? empresa.classificacao,
+        ultimoContato: hoje(),
+        proximoContato: adicionarDias(2),
+      });
+      setAbordagem(null);
+      toast.success("Abordagem registrada como enviada");
+    } finally {
+      setRegistrando(false);
+      setRegistroAberto(false);
+    }
   };
 
   const gerarSugestao = async () => {
@@ -119,24 +132,33 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   const registrarTurno = async () => {
     if (!sugestao?.mensagem || !respostaCliente.trim()) return;
     setRegistrando(true);
-    const agoraT = agora();
-    const hojeT = hoje();
-    const msgCliente: Mensagem = { id: uid("msg"), autor: "cliente", texto: respostaCliente.trim(), data: hojeT, hora: agoraT };
-    const msgVendedor: Mensagem = { id: uid("msg"), autor: "vendedor", texto: sugestao.mensagem, data: hojeT, hora: agoraT };
-    const novaConversa = [...empresa.conversa, msgCliente, msgVendedor];
-    const resultado = await analisarComIA(conversaComoTexto(novaConversa), contexto, configIA);
-    atualizarEmpresa(empresa.id, {
-      conversa: novaConversa,
-      analise: resultado?.analise ?? null,
-      status: resultado?.analise ? novoStatusPorAnalise(resultado.analise, empresa) : "AGUARDANDO_RESPOSTA",
-      classificacao: resultado?.analise?.classificacao ?? empresa.classificacao,
-      ultimoContato: hojeT,
-      proximoContato: adicionarDias(2),
-    });
-    setRespostaCliente("");
-    setSugestao(null);
-    setRegistrando(false);
-    toast.success("Resposta registrada — continue o ciclo até fechar a venda");
+    setRegistroAberto(true);
+    setRegistroKey((k) => k + 1);
+    try {
+      const agoraT = agora();
+      const hojeT = hoje();
+      const msgCliente: Mensagem = { id: uid("msg"), autor: "cliente", texto: respostaCliente.trim(), data: hojeT, hora: agoraT };
+      const msgVendedor: Mensagem = { id: uid("msg"), autor: "vendedor", texto: sugestao.mensagem, data: hojeT, hora: agoraT };
+      const novaConversa = [...empresa.conversa, msgCliente, msgVendedor];
+      const [resultado] = await Promise.all([
+        analisarComIA(conversaComoTexto(novaConversa), contexto, configIA),
+        aguardarMinimo(3000),
+      ]);
+      atualizarEmpresa(empresa.id, {
+        conversa: novaConversa,
+        analise: resultado?.analise ?? null,
+        status: resultado?.analise ? novoStatusPorAnalise(resultado.analise, empresa) : "AGUARDANDO_RESPOSTA",
+        classificacao: resultado?.analise?.classificacao ?? empresa.classificacao,
+        ultimoContato: hojeT,
+        proximoContato: adicionarDias(2),
+      });
+      setRespostaCliente("");
+      setSugestao(null);
+      toast.success("Resposta registrada — continue o ciclo até fechar a venda");
+    } finally {
+      setRegistrando(false);
+      setRegistroAberto(false);
+    }
   };
 
   const fecharVenda = () => {
@@ -318,12 +340,25 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
           </div>
         )}
 
-        {/* Pipeline de análise da IA */}
+        {/* Pipeline de análise da IA (abordagem e sugestão) */}
         <PipelineAnalise
           key={pipelineKey}
-          aberto={carregandoSugestao}
+          aberto={carregandoSugestao || gerandoAbordagem}
+          variante="analise"
           empresa={empresa.nome}
-          aoAbortar={() => setCarregandoSugestao(false)}
+          aoAbortar={() => {
+            setCarregandoSugestao(false);
+            setGerandoAbordagem(false);
+          }}
+        />
+
+        {/* Pipeline de envio/registro */}
+        <PipelineAnalise
+          key={registroKey}
+          aberto={registroAberto}
+          variante="envio"
+          titulo="Envio em andamento"
+          empresa={empresa.nome}
         />
       </CardContent>
     </Card>

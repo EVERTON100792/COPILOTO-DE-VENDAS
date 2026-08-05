@@ -8,6 +8,7 @@
 }
 
 :root {
+  color-scheme: light;
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -33,6 +34,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #07060b;
   --foreground: #f4f4f5;
   --card: #0e0d14;
@@ -320,4 +322,9 @@ body {
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
+}
+
+.dark select option {
+  background-color: #0e0d14;
+  color: #f4f4f5;
 }

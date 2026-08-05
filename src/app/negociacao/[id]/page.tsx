@@ -35,6 +35,7 @@ import { analisarComIA, consultarEstrategico } from "@/lib/ai/gateway";
 import { avaliarMensagem } from "@/lib/ai/consultant";
 import { analisarSite } from "@/lib/ai/siteAnalysis";
 import { ConversaAssistida } from "@/components/negociacao/conversa-assistida";
+import { PipelineAnalise } from "@/components/negociacao/pipeline-analise";
 import { toast } from "sonner";
 
 export default function NegociacaoEmpresaPage() {
@@ -49,6 +50,8 @@ export default function NegociacaoEmpresaPage() {
   const [modalPasta, setModalPasta] = useState(false);
   const [modoFechamentoAtivo, setModoFechamentoAtivo] = useState(false);
   const [consultorResultado, setConsultorResultado] = useState<ReturnType<typeof avaliarMensagem> | null>(null);
+  const [consultorCarregando, setConsultorCarregando] = useState(false);
+  const [consultorKey, setConsultorKey] = useState(0);
 
   const site = useMemo(
     () => (empresa?.siteAtual ? analisarSite(empresa.siteAtual, empresa.categoria, empresa.descricao) : null),
@@ -115,19 +118,28 @@ export default function NegociacaoEmpresaPage() {
       toast.error("Digite a mensagem que você planeja enviar");
       return;
     }
-    const nota = await consultarEstrategico(
-      consultorMsg,
-      { nomeEmpresa: empresa.nome, segmento: empresa.categoria },
-      {
-        openrouterKey: config.openrouterKey,
-        modeloIA: config.modeloIA,
-        usarIAReal: config.usarIAReal,
-      }
-    );
-    atualizarEmpresa(empresa.id, {
-      observacoes: `[Consultor Estratégico ${new Date().toLocaleDateString("pt-BR")}] Nota ${nota.nota}/100 — ${nota.comoMelhorar}`,
-    });
-    setConsultorResultado(nota);
+    setConsultorCarregando(true);
+    setConsultorKey((k) => k + 1);
+    try {
+      const [nota] = await Promise.all([
+        consultarEstrategico(
+          consultorMsg,
+          { nomeEmpresa: empresa.nome, segmento: empresa.categoria },
+          {
+            openrouterKey: config.openrouterKey,
+            modeloIA: config.modeloIA,
+            usarIAReal: config.usarIAReal,
+          }
+        ),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+      atualizarEmpresa(empresa.id, {
+        observacoes: `[Consultor Estratégico ${new Date().toLocaleDateString("pt-BR")}] Nota ${nota.nota}/100 — ${nota.comoMelhorar}`,
+      });
+      setConsultorResultado(nota);
+    } finally {
+      setConsultorCarregando(false);
+    }
   };
 
   const copiarResposta = async (texto: string) => {
@@ -534,6 +546,15 @@ export default function NegociacaoEmpresaPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Pipeline do Consultor Estratégico */}
+      <PipelineAnalise
+        key={consultorKey}
+        aberto={consultorCarregando}
+        variante="consultor"
+        titulo="Consultor Estratégico"
+        subtitulo="Avaliando sua mensagem com a base de consultoria"
+      />
     </div>
   );
 }
