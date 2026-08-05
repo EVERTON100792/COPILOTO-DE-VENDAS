@@ -227,44 +227,59 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
           ? `Nome do vendedor: ${payload.nomeVendedor ?? "o vendedor"}\nPeríodo do dia: ${payload.periodoDia ?? "Bom dia"}\nEmpresa: ${payload.contexto.nomeEmpresa}\nSegmento: ${payload.contexto.segmento}\nCidade: ${payload.contexto.cidade}\nNota Google: ${payload.contexto.notaGoogle}`
           : `Conversa:\n${conversaTexto}\n\nEmpresa: ${payload.contexto.nomeEmpresa} (${payload.contexto.segmento}, ${payload.contexto.cidade}, nota Google ${payload.contexto.notaGoogle})`;
 
-  try {
-    const resposta = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${chave}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://sales-negotiator.app",
-        "X-Title": "Sales Negotiator AI",
-      },
-      body: JSON.stringify({
-        model: payload.modelo ?? "openai/gpt-oss-20b:free",
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: instrucao },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: "json_object" },
-      }),
-    });
+  const MODELOS_FALLBACK = [
+    "openrouter/free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-nano-9b-v2:free",
+  ];
+  const modelos = [payload.modelo ?? "openai/gpt-oss-20b:free", ...MODELOS_FALLBACK];
+  let ultimoErro = "";
 
-    if (!resposta.ok) {
-      return NextResponse.json(
-        { erro: `Erro do OpenRouter: ${resposta.status}` },
-        { status: 502 }
-      );
+  for (const modelo of modelos) {
+    const usarJsonMode = modelo === modelos[0];
+    try {
+      const resposta = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${chave}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://sales-negotiator.app",
+          "X-Title": "Sales Negotiator AI",
+        },
+        body: JSON.stringify({
+          model: modelo,
+          messages: [
+            { role: "system", content: prompt },
+            { role: "user", content: instrucao },
+          ],
+          temperature: 0.7,
+          max_tokens: 2000,
+          ...(usarJsonMode ? { response_format: { type: "json_object" } } : {}),
+        }),
+      });
+
+      if (resposta.ok) {
+        const dados = (await resposta.json()) as {
+          choices: { message: { content: string } }[];
+        };
+        const conteudo = dados.choices[0]?.message?.content ?? "";
+        return NextResponse.json(extrairJson(conteudo));
+      }
+
+      ultimoErro = `Erro do OpenRouter: ${resposta.status}`;
+      if (resposta.status === 429 || resposta.status === 503) {
+        const retryAfter = Number(resposta.headers.get("retry-after") || 0) * 1000;
+        await new Promise((r) => setTimeout(r, Math.min(Math.max(retryAfter, 1200), 4000)));
+        continue;
+      }
+      break;
+    } catch (e) {
+      ultimoErro = e instanceof Error ? e.message : "Falha ao chamar OpenRouter";
     }
-
-    const dados = (await resposta.json()) as {
-      choices: { message: { content: string } }[];
-    };
-    const conteudo = dados.choices[0]?.message?.content ?? "";
-    const json = extrairJson(conteudo);
-    return NextResponse.json(json);
-  } catch (e) {
-    return NextResponse.json(
-      { erro: e instanceof Error ? e.message : "Falha ao chamar OpenRouter" },
-      { status: 500 }
-    );
   }
+
+  return NextResponse.json(
+    { erro: ultimoErro || "Limite de uso do modelo atingido. Tente novamente em instantes." },
+    { status: 502 }
+  );
 }
