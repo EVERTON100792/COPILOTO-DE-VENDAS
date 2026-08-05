@@ -232,7 +232,7 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
     "google/gemma-4-26b-a4b-it:free",
     "nvidia/nemotron-nano-9b-v2:free",
   ];
-  const modelos = [payload.modelo ?? "openai/gpt-oss-20b:free", ...MODELOS_FALLBACK];
+  const modelos = [payload.modelo ?? "openai/gpt-4o-mini", ...MODELOS_FALLBACK];
   let ultimoErro = "";
 
   for (const modelo of modelos) {

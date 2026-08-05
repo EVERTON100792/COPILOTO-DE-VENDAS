@@ -12,11 +12,11 @@ import { toast } from "sonner";
 import { avaliarMensagem } from "@/lib/ai/consultant";
 
 const MODELOS = [
+  { id: "openai/gpt-4o-mini", nome: "GPT-4o mini · RECOMENDADO (estável, pago por uso)" },
   { id: "openai/gpt-oss-20b:free", nome: "GPT-OSS 20B · GRÁTIS" },
   { id: "google/gemma-4-26b-a4b-it:free", nome: "Gemma 4 26B · GRÁTIS" },
   { id: "nvidia/nemotron-nano-9b-v2:free", nome: "Nemotron Nano 9B · GRÁTIS" },
   { id: "openrouter/free", nome: "openrouter/free (Auto · melhor grátis)" },
-  { id: "openai/gpt-4o-mini", nome: "GPT-4o mini" },
   { id: "openai/gpt-4o", nome: "GPT-4o" },
   { id: "anthropic/claude-3.5-sonnet", nome: "Claude 3.5 Sonnet" },
   { id: "deepseek/deepseek-chat", nome: "DeepSeek Chat" },

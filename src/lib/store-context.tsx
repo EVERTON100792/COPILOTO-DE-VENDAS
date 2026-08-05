@@ -47,7 +47,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     nomeVendedor: "",
     nomeAgencia: "",
     openrouterKey: "",
-    modeloIA: "openai/gpt-oss-20b:free",
+    modeloIA: "openai/gpt-4o-mini",
     usarIAReal: true,
     lingua: "pt-BR",
   });
