@@ -28,6 +28,8 @@ export default function ConfigPage() {
     nomeVendedor: config.nomeVendedor,
     nomeAgencia: config.nomeAgencia,
     openrouterKey: "",
+    geminiKey: "",
+    groqKey: "",
     modeloIA: config.modeloIA,
     usarIAReal: config.usarIAReal,
   });
@@ -42,6 +44,8 @@ export default function ConfigPage() {
       nomeVendedor: form.nomeVendedor.trim() || "Vendedor",
       nomeAgencia: form.nomeAgencia.trim() || "Sua Agência",
       openrouterKey: form.openrouterKey,
+      geminiKey: form.geminiKey,
+      groqKey: form.groqKey,
       modeloIA: form.modeloIA,
       usarIAReal: form.usarIAReal,
     });
@@ -51,8 +55,8 @@ export default function ConfigPage() {
   };
 
   const testarIA = () => {
-    if (!form.usarIAReal && !form.openrouterKey) {
-      toast("Usando motor local de IA. Ative a IA real para usar OpenRouter.");
+    if (!form.usarIAReal && !form.openrouterKey && !form.geminiKey && !form.groqKey) {
+      toast("Usando motor local de IA. Ative a IA real e adicione uma chave grátis (Gemini ou Groq).");
       return;
     }
     try {
@@ -164,6 +168,59 @@ export default function ConfigPage() {
           <div className="flex items-center gap-2 rounded-lg border border-dashed border-border bg-secondary/20 p-3 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
             Sua chave fica armazenada apenas neste navegador e nunca é enviada a outros serviços.
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" /> IA grátis e ilimitada (reserva automática)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Provedores <b>gratuitos</b> com chave sem validade e cota diária generosa. Se o OpenRouter falhar
+            (limite ou sem crédito), o sistema tenta <b>Gemini</b> e depois <b>Groq</b> automaticamente. Adicione uma
+            delas e a IA nunca fica indisponível.
+          </p>
+          <div className="space-y-1.5">
+            <Label>
+              Chave Google Gemini (grátis) —{" "}
+              <a
+                className="text-primary underline underline-offset-2"
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noreferrer"
+              >
+                criar em aistudio.google.com/apikey
+              </a>
+            </Label>
+            <Input
+              type="password"
+              placeholder="AIza..."
+              value={form.geminiKey}
+              onChange={(e) => set("geminiKey", e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>
+              Chave Groq (grátis, 14.400 chamadas/dia) —{" "}
+              <a
+                className="text-primary underline underline-offset-2"
+                href="https://console.groq.com/keys"
+                target="_blank"
+                rel="noreferrer"
+              >
+                criar em console.groq.com/keys
+              </a>
+            </Label>
+            <Input
+              type="password"
+              placeholder="gsk_..."
+              value={form.groqKey}
+              onChange={(e) => set("groqKey", e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>

@@ -179,8 +179,10 @@ function extrairJson(texto: string): unknown {
 
 export async function POST(req: Request) {
   const chave = req.headers.get("x-openrouter-key") || process.env.OPENROUTER_API_KEY || "";
-  if (!chave) {
-    return NextResponse.json({ erro: "Chave OpenRouter não configurada" }, { status: 400 });
+  const chaveGemini = req.headers.get("x-gemini-key") || process.env.GEMINI_API_KEY || "";
+  const chaveGroq = req.headers.get("x-groq-key") || process.env.GROQ_API_KEY || "";
+  if (!chave && !chaveGemini && !chaveGroq) {
+    return NextResponse.json({ erro: "Nenhuma chave de IA configurada" }, { status: 400 });
   }
 
   let payload: Payload;
@@ -232,54 +234,86 @@ Responda em português brasileiro, apenas com JSON válido, no formato:
     "google/gemma-4-26b-a4b-it:free",
     "nvidia/nemotron-nano-9b-v2:free",
   ];
-  const modelos = [payload.modelo ?? "openai/gpt-4o-mini", ...MODELOS_FALLBACK];
   let ultimoErro = "";
 
-  for (const modelo of modelos) {
-    const usarJsonMode = modelo === modelos[0];
-    try {
-      const resposta = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${chave}`,
-          "Content-Type": "application/json",
+  async function chamarOpenAICompat(opts: {
+    url: string;
+    chaveProvedor: string;
+    modelo: string;
+    usarJson: boolean;
+    extraAdicionais?: Record<string, string>;
+  }): Promise<{ ok: true; json: unknown } | { ok: false; status: number }> {
+    const resposta = await fetch(opts.url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${opts.chaveProvedor}`,
+        "Content-Type": "application/json",
+        ...(opts.extraAdicionais ?? {}),
+      },
+      body: JSON.stringify({
+        model: opts.modelo,
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: instrucao },
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+        ...(opts.usarJson ? { response_format: { type: "json_object" } } : {}),
+      }),
+    });
+    if (!resposta.ok) return { ok: false, status: resposta.status };
+    const dados = (await resposta.json()) as {
+      choices?: { message?: { content?: string } }[];
+    };
+    const conteudo = dados.choices?.[0]?.message?.content ?? "";
+    return { ok: true, json: extrairJson(conteudo) };
+  }
+
+  // 1) OpenRouter (modelo escolhido pelo usuário + reservas gratuitas)
+  if (chave) {
+    const modelos = [payload.modelo ?? "openai/gpt-4o-mini", ...MODELOS_FALLBACK];
+    for (const modelo of modelos) {
+      const r = await chamarOpenAICompat({
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        chaveProvedor: chave,
+        modelo,
+        usarJson: modelo === modelos[0],
+        extraAdicionais: {
           "HTTP-Referer": "https://sales-negotiator.app",
           "X-Title": "Sales Negotiator AI",
         },
-        body: JSON.stringify({
-          model: modelo,
-          messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: instrucao },
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
-          ...(usarJsonMode ? { response_format: { type: "json_object" } } : {}),
-        }),
       });
-
-      if (resposta.ok) {
-        const dados = (await resposta.json()) as {
-          choices: { message: { content: string } }[];
-        };
-        const conteudo = dados.choices[0]?.message?.content ?? "";
-        return NextResponse.json(extrairJson(conteudo));
-      }
-
-      ultimoErro = `Erro do OpenRouter: ${resposta.status}`;
-      if (resposta.status === 429 || resposta.status === 402 || resposta.status === 503) {
-        const retryAfter = Number(resposta.headers.get("retry-after") || 0) * 1000;
-        await new Promise((r) => setTimeout(r, Math.min(Math.max(retryAfter, 1200), 4000)));
-        continue;
-      }
-      break;
-    } catch (e) {
-      ultimoErro = e instanceof Error ? e.message : "Falha ao chamar OpenRouter";
+      if (r.ok) return NextResponse.json(r.json);
+      ultimoErro = `OpenRouter (${modelo}): HTTP ${r.status}`;
     }
   }
 
+  // 2) Google Gemini (grátis, chave sem validade — AI Studio)
+  if (chaveGemini) {
+    const r = await chamarOpenAICompat({
+      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      chaveProvedor: chaveGemini,
+      modelo: "gemini-2.0-flash",
+      usarJson: false,
+    });
+    if (r.ok) return NextResponse.json(r.json);
+    ultimoErro = `Gemini: HTTP ${r.status}`;
+  }
+
+  // 3) Groq (grátis, cota diária alta — console.groq.com)
+  if (chaveGroq) {
+    const r = await chamarOpenAICompat({
+      url: "https://api.groq.com/openai/v1/chat/completions",
+      chaveProvedor: chaveGroq,
+      modelo: "llama-3.3-70b-versatile",
+      usarJson: true,
+    });
+    if (r.ok) return NextResponse.json(r.json);
+    ultimoErro = `Groq: HTTP ${r.status}`;
+  }
+
   return NextResponse.json(
-    { erro: ultimoErro || "Limite de uso do modelo atingido. Tente novamente em instantes." },
+    { erro: ultimoErro || "Nenhuma IA configurada. Adicione uma chave em Configurações ou use o motor local." },
     { status: 502 }
   );
 }

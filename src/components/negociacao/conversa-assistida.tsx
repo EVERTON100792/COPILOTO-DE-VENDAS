@@ -51,6 +51,8 @@ export function ConversaAssistida({ empresa }: { empresa: Empresa }) {
   const aguardarMinimo = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
   const configIA = {
     openrouterKey: config.openrouterKey,
+    geminiKey: config.geminiKey,
+    groqKey: config.groqKey,
     modeloIA: config.modeloIA,
     usarIAReal: config.usarIAReal,
     nomeVendedor: config.nomeVendedor,

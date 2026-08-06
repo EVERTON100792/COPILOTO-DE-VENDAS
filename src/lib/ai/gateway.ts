@@ -5,6 +5,8 @@ import { parsearConversa } from "./parser";
 
 interface GatewayConfig {
   openrouterKey: string;
+  geminiKey: string;
+  groqKey: string;
   modeloIA: string;
   usarIAReal: boolean;
   nomeVendedor?: string;
@@ -34,6 +36,8 @@ async function chamarOpenRouter(
       headers: {
         "Content-Type": "application/json",
         ...(config.openrouterKey ? { "x-openrouter-key": config.openrouterKey } : {}),
+        ...(config.geminiKey ? { "x-gemini-key": config.geminiKey } : {}),
+        ...(config.groqKey ? { "x-groq-key": config.groqKey } : {}),
       },
       body: JSON.stringify({
         acao,

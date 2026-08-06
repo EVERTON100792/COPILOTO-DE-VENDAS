@@ -250,6 +250,8 @@ export interface Configuracao {
   nomeVendedor: string;
   nomeAgencia: string;
   openrouterKey: string;
+  geminiKey: string;
+  groqKey: string;
   modeloIA: string;
   usarIAReal: boolean;
   lingua: "pt-BR";

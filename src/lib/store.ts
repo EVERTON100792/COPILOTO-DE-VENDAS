@@ -441,6 +441,8 @@ export function carregarDados(): StoreData {
     nomeVendedor: "Everton",
     nomeAgencia: "Sua Agência",
     openrouterKey: "",
+    geminiKey: "",
+    groqKey: "",
     modeloIA: "openai/gpt-4o-mini",
     usarIAReal: true,
     lingua: "pt-BR",

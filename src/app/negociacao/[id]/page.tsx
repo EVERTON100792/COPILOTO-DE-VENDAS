@@ -88,6 +88,8 @@ export default function NegociacaoEmpresaPage() {
       },
       {
         openrouterKey: config.openrouterKey,
+        geminiKey: config.geminiKey,
+        groqKey: config.groqKey,
         modeloIA: config.modeloIA,
         usarIAReal: config.usarIAReal,
       }
@@ -127,6 +129,8 @@ export default function NegociacaoEmpresaPage() {
           { nomeEmpresa: empresa.nome, segmento: empresa.categoria },
           {
             openrouterKey: config.openrouterKey,
+            geminiKey: config.geminiKey,
+            groqKey: config.groqKey,
             modeloIA: config.modeloIA,
             usarIAReal: config.usarIAReal,
           }

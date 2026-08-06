@@ -47,6 +47,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     nomeVendedor: "",
     nomeAgencia: "",
     openrouterKey: "",
+    geminiKey: "",
+    groqKey: "",
     modeloIA: "openai/gpt-4o-mini",
     usarIAReal: true,
     lingua: "pt-BR",
